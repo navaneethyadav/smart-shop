@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h3 class="mb-3">🔔 Notifications</h3>
+
+{% if notifications %}
+    <a href="{% url 'store:mark_all_notifications_read' %}" class="btn btn-sm btn-outline-success mb-3">
+        Mark all as read
+    </a>
+
+    <ul class="list-group">
+        {% for n in notifications %}
+            <li class="list-group-item d-flex justify-content-between align-items-center {% if not n.is_read %}fw-bold{% endif %}">
+                {{ n.message }}
+                {% if not n.is_read %}
+                    <a href="{% url 'store:mark_notification_read' n.id %}" class="btn btn-sm btn-outline-primary">
+                        Mark read
+                    </a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No notifications.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="fw-bold mb-2">Your Shopping Cart</h2>
+<p class="text-muted mb-4">
+    Review your items before proceeding to checkout.
+</p>
+
+{% if cart_items %}
+<div class="table-responsive">
+<table class="table align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th class="text-end">Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for item in cart_items %}
+        <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹ {{ item.product.price }}</td>
+            <td class="text-end">₹ {{ item.subtotal }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<div class="alert alert-light border d-flex justify-content-between align-items-center">
+    <strong>Total Amount</strong>
+    <strong>₹ {{ total }}</strong>
+</div>
+
+<div class="text-end">
+    <a href="{% url 'store:checkout' %}" class="btn btn-success btn-lg">
+        Proceed to Secure Checkout
+    </a>
+</div>
+
+{% else %}
+<div class="alert alert-info text-center">
+    Your cart is currently empty.
+</div>
+{% endif %}
+
+{% endblock %}

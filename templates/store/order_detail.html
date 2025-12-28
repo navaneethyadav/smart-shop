@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-3">Order #{{ order.id }}</h2>
+
+<p>
+    <strong>Status:</strong>
+    {% if order.status == 'PLACED' %}
+        <span class="badge bg-secondary">Placed</span>
+    {% elif order.status == 'CONFIRMED' %}
+        <span class="badge bg-info">Confirmed</span>
+    {% elif order.status == 'SHIPPED' %}
+        <span class="badge bg-primary">Shipped</span>
+    {% elif order.status == 'DELIVERED' %}
+        <span class="badge bg-success">Delivered</span>
+    {% elif order.status == 'CANCELLED' %}
+        <span class="badge bg-danger">Cancelled</span>
+    {% endif %}
+</p>
+
+<p>
+    <strong>Payment:</strong>
+    {{ order.payment_method }} ({{ order.payment_status }})
+</p>
+
+<p>
+    <strong>Delivery Address:</strong><br>
+    {{ order.address }}
+</p>
+
+<hr>
+
+<h5>Items</h5>
+{% for item in order.items.all %}
+    <p>{{ item.product.name }} × {{ item.quantity }} — ₹ {{ item.price }}</p>
+{% endfor %}
+
+<hr>
+<h5>Total: ₹ {{ order.total_amount }}</h5>
+
+{% if order.can_cancel %}
+<br>
+<a href="{% url 'store:cancel_order' order.id %}" class="btn btn-danger">
+    Cancel Order
+</a>
+{% endif %}
+
+{% endblock %}

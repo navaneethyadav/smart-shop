@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+
+<h1>📊 Smart Shop – Business Overview</h1>
+
+<div class="module">
+    <h2>Key Metrics</h2>
+    <ul>
+        <li><strong>Total Orders:</strong> {{ total_orders }}</li>
+        <li><strong>Total Users:</strong> {{ total_users }}</li>
+        <li><strong>Total Revenue:</strong> ₹ {{ total_revenue }}</li>
+    </ul>
+</div>
+
+<div class="module">
+    <h2>Orders by Status</h2>
+    <ul>
+        <li>Placed: {{ order_status_count.PLACED }}</li>
+        <li>Confirmed: {{ order_status_count.CONFIRMED }}</li>
+        <li>Shipped: {{ order_status_count.SHIPPED }}</li>
+        <li>Delivered: {{ order_status_count.DELIVERED }}</li>
+        <li>Cancelled: {{ order_status_count.CANCELLED }}</li>
+    </ul>
+</div>
+
+<div class="module">
+    <h2>⚠ Low Stock Products</h2>
+
+    {% if low_stock_products %}
+        <ul>
+            {% for product in low_stock_products %}
+                <li>
+                    {{ product.name }} — Stock: {{ product.stock }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>All products have sufficient stock.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

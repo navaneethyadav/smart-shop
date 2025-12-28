@@ -1,0 +1,18 @@
+# Environment & secrets
+.env
+
+# Database
+db.sqlite3
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Collected static
+staticfiles/
+
+# Media (optional – keep local)
+media/

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">Order Invoice</h2>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <p><strong>Order ID:</strong> #{{ order.id }}</p>
+        <p><strong>Order Date:</strong> {{ order.created_at|date:"d M Y, h:i A" }}</p>
+        <p><strong>Customer:</strong> {{ order.user.username }}</p>
+
+        <p>
+            <strong>Order Status:</strong>
+            {% if order.status == 'PLACED' %}
+                <span class="badge bg-secondary">Placed</span>
+            {% elif order.status == 'CONFIRMED' %}
+                <span class="badge bg-info">Confirmed</span>
+            {% elif order.status == 'SHIPPED' %}
+                <span class="badge bg-primary">Shipped</span>
+            {% elif order.status == 'DELIVERED' %}
+                <span class="badge bg-success">Delivered</span>
+            {% elif order.status == 'CANCELLED' %}
+                <span class="badge bg-danger">Cancelled</span>
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Payment Method:</strong> {{ order.payment_method }}
+            <br>
+            <strong>Payment Status:</strong>
+            {% if order.payment_status == 'PAID' %}
+                <span class="text-success">Payment Successful</span>
+            {% else %}
+                <span class="text-warning">Payment Pending (Pay on Delivery)</span>
+            {% endif %}
+        </p>
+
+        <p><strong>Delivery Address:</strong><br>{{ order.address }}</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <strong>Items</strong>
+    </div>
+    <div class="card-body">
+        {% for item in order.items.all %}
+        <div class="row mb-2">
+            <div class="col-6">{{ item.product.name }}</div>
+            <div class="col-2">x {{ item.quantity }}</div>
+            <div class="col-4 text-end">₹ {{ item.price }}</div>
+        </div>
+        {% endfor %}
+        <hr>
+        <h5 class="text-end">Total Paid / Payable: ₹ {{ order.total_amount }}</h5>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'store:my_orders' %}" class="btn btn-outline-dark">
+        Back to My Orders
+    </a>
+</div>
+
+{% endblock %}

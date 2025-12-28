@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row g-4 mt-2">
+
+    <div class="col-md-6 text-center">
+        <img src="{{ product.image.url }}"
+             class="img-fluid rounded shadow-sm"
+             style="max-height:450px; object-fit:cover;"
+             alt="{{ product.name }}">
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="fw-bold">{{ product.name }}</h2>
+        <h4 class="text-success mt-2">₹ {{ product.price }}</h4>
+
+        <p class="text-muted mt-3">
+            {{ product.description }}
+        </p>
+
+        <hr>
+
+        <ul class="text-muted small">
+            <li>Free delivery available</li>
+            <li>Cash on Delivery supported</li>
+            <li>Secure online payment</li>
+        </ul>
+
+        <div class="d-grid gap-3 mt-4">
+            <a href="{% url 'store:add_to_cart' product.id %}?buy_now=1"
+               class="btn btn-warning btn-lg fw-bold">
+                Buy Now
+            </a>
+
+            <a href="{% url 'store:add_to_cart' product.id %}"
+               class="btn btn-dark btn-lg">
+                Add to Cart
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

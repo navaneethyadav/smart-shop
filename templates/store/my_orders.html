@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="fw-bold mb-2">My Orders</h2>
+<p class="text-muted mb-4">
+    Track your purchases and delivery status.
+</p>
+
+{% if orders %}
+    {% for order in orders %}
+    <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <h6 class="fw-bold mb-1">Order #{{ order.id }}</h6>
+                <span class="small text-muted">
+                    {{ order.created_at|date:"d M Y" }}
+                </span>
+            </div>
+
+            <p class="mb-2">
+                <strong>Status:</strong>
+                {% if order.status == 'PLACED' %}
+                    <span class="badge bg-secondary">Placed</span>
+                {% elif order.status == 'CONFIRMED' %}
+                    <span class="badge bg-info">Confirmed</span>
+                {% elif order.status == 'SHIPPED' %}
+                    <span class="badge bg-primary">Shipped</span>
+                {% elif order.status == 'DELIVERED' %}
+                    <span class="badge bg-success">Delivered</span>
+                {% elif order.status == 'CANCELLED' %}
+                    <span class="badge bg-danger">Cancelled</span>
+                {% endif %}
+            </p>
+
+            <p class="mb-2">
+                <strong>Total:</strong> ₹ {{ order.total_amount }}
+            </p>
+
+            <a href="{% url 'store:order_detail' order.id %}"
+               class="btn btn-outline-dark btn-sm">
+                View Details
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="alert alert-info text-center">
+    You have not placed any orders yet.
+</div>
+{% endif %}
+
+{% endblock %}
