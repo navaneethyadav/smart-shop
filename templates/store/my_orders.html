@@ -2,51 +2,78 @@
 
 {% block content %}
 
-<h2 class="fw-bold mb-2">My Orders</h2>
+<h2 class="fw-bold mb-1">My Orders</h2>
 <p class="text-muted mb-4">
-    Track your purchases and delivery status.
+    Track your purchases, delivery progress, and order history.
 </p>
 
 {% if orders %}
     {% for order in orders %}
-    <div class="card mb-3 shadow-sm border-0">
+    <div class="card mb-4 shadow-sm border-0">
         <div class="card-body">
-            <div class="d-flex justify-content-between">
-                <h6 class="fw-bold mb-1">Order #{{ order.id }}</h6>
-                <span class="small text-muted">
-                    {{ order.created_at|date:"d M Y" }}
-                </span>
+
+            <!-- ================= ORDER HEADER ================= -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0">Order #{{ order.id }}</h6>
+                    <small class="text-muted">
+                        Placed on {{ order.created_at|date:"d M Y, h:i A" }}
+                    </small>
+                </div>
+
+                <!-- Status Badge -->
+                <div>
+                    {% if order.status == 'PLACED' %}
+                        <span class="badge bg-secondary px-3 py-2">Placed</span>
+                    {% elif order.status == 'CONFIRMED' %}
+                        <span class="badge bg-info px-3 py-2">Confirmed</span>
+                    {% elif order.status == 'SHIPPED' %}
+                        <span class="badge bg-primary px-3 py-2">Shipped</span>
+                    {% elif order.status == 'DELIVERED' %}
+                        <span class="badge bg-success px-3 py-2">Delivered</span>
+                    {% elif order.status == 'CANCELLED' %}
+                        <span class="badge bg-danger px-3 py-2">Cancelled</span>
+                    {% endif %}
+                </div>
             </div>
 
-            <p class="mb-2">
-                <strong>Status:</strong>
-                {% if order.status == 'PLACED' %}
-                    <span class="badge bg-secondary">Placed</span>
-                {% elif order.status == 'CONFIRMED' %}
-                    <span class="badge bg-info">Confirmed</span>
-                {% elif order.status == 'SHIPPED' %}
-                    <span class="badge bg-primary">Shipped</span>
-                {% elif order.status == 'DELIVERED' %}
-                    <span class="badge bg-success">Delivered</span>
-                {% elif order.status == 'CANCELLED' %}
-                    <span class="badge bg-danger">Cancelled</span>
-                {% endif %}
-            </p>
+            <hr class="my-2">
 
-            <p class="mb-2">
-                <strong>Total:</strong> ₹ {{ order.total_amount }}
-            </p>
+            <!-- ================= ORDER SUMMARY ================= -->
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-0 text-muted small">Total Amount</p>
+                    <h6 class="fw-bold mb-0">₹ {{ order.total_amount }}</h6>
+                </div>
 
-            <a href="{% url 'store:order_detail' order.id %}"
-               class="btn btn-outline-dark btn-sm">
-                View Details
-            </a>
+                <a href="{% url 'store:order_detail' order.id %}"
+                   class="btn btn-outline-dark btn-sm px-4">
+                    View Order
+                </a>
+            </div>
+
         </div>
     </div>
     {% endfor %}
+
 {% else %}
-<div class="alert alert-info text-center">
-    You have not placed any orders yet.
+<!-- ================= EMPTY ORDERS STATE ================= -->
+<div class="card border-0 shadow-sm text-center p-5">
+    <div class="card-body">
+
+        <div class="mb-3" style="font-size: 3rem;">📦</div>
+
+        <h4 class="fw-bold mb-2">No orders yet</h4>
+        <p class="text-muted mb-4">
+            You haven’t placed any orders yet.<br>
+            Once you do, all your orders will appear here.
+        </p>
+
+        <a href="{% url 'store:home' %}" class="btn btn-dark btn-lg px-4">
+            Start Shopping
+        </a>
+
+    </div>
 </div>
 {% endif %}
 

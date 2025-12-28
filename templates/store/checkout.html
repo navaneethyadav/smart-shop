@@ -4,32 +4,99 @@
 
 <h2 class="fw-bold mb-2">Secure Checkout</h2>
 <p class="text-muted mb-4">
-    Confirm delivery details and choose payment method.
+    Confirm your delivery details and choose a secure payment method.
 </p>
 
-<form method="post" class="card shadow-sm p-4">
-    {% csrf_token %}
+<div class="row g-4">
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Delivery Address</label>
-        <textarea name="address" class="form-control" rows="3" required></textarea>
+    <!-- ================= LEFT : ADDRESS & PAYMENT ================= -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Delivery Address
+                        </label>
+                        <textarea name="address"
+                                  class="form-control"
+                                  rows="4"
+                                  required></textarea>
+                        <small class="text-muted">
+                            Please enter a complete and accurate delivery address.
+                        </small>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            Payment Method
+                        </label>
+                        <select name="payment_method"
+                                class="form-select"
+                                required>
+                            <option value="COD">Cash on Delivery</option>
+                            <option value="ONLINE">Online Payment</option>
+                        </select>
+                    </div>
+
+                    <!-- Place Order -->
+                    <button class="btn btn-success btn-lg w-100 fw-bold">
+                        Place Order Securely
+                    </button>
+                </form>
+
+            </div>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Payment Method</label>
-        <select name="payment_method" class="form-select" required>
-            <option value="COD">Cash on Delivery</option>
-            <option value="ONLINE">Online Payment</option>
-        </select>
+    <!-- ================= RIGHT : ORDER SUMMARY + TRUST ================= -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+                <h6 class="fw-bold mb-3">Order Summary</h6>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Amount</span>
+                    <span class="fw-bold">₹ {{ total }}</span>
+                </div>
+
+                <hr>
+
+                <!-- TRUST BADGES -->
+                <div class="small text-muted">
+
+                    <p class="mb-2">
+                        🔒 <strong>100% Secure Payments</strong><br>
+                        SSL encrypted checkout
+                    </p>
+
+                    <p class="mb-2">
+                        💰 <strong>Cash on Delivery Available</strong><br>
+                        Pay only after delivery
+                    </p>
+
+                    <p class="mb-2">
+                        🚚 <strong>Fast & Safe Delivery</strong><br>
+                        Delivered within 3–5 business days
+                    </p>
+
+                    <p class="mb-0">
+                        🧾 <strong>Invoice Provided</strong><br>
+                        Downloadable after order
+                    </p>
+
+                </div>
+
+            </div>
+        </div>
     </div>
 
-    <div class="alert alert-light border">
-        <strong>Total Payable:</strong> ₹ {{ total }}
-    </div>
-
-    <button class="btn btn-success btn-lg w-100">
-        Place Order Securely
-    </button>
-</form>
+</div>
 
 {% endblock %}

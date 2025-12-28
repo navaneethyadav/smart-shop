@@ -2,18 +2,48 @@
 
 {% block content %}
 
-<div class="row g-4 mt-2">
+<div class="row g-5 mt-3 align-items-start">
 
-    <div class="col-md-6 text-center">
-        <img src="{{ product.image.url }}"
-             class="img-fluid rounded shadow-sm"
-             style="max-height:450px; object-fit:cover;"
-             alt="{{ product.name }}">
+    <!-- ================= PRODUCT IMAGE ================= -->
+    <div class="col-lg-6 text-center">
+        <div class="bg-white p-4 rounded-4 shadow-sm">
+            <img src="{{ product.image.url }}"
+                 class="img-fluid rounded"
+                 style="max-height:460px; object-fit:cover;"
+                 alt="{{ product.name }}">
+        </div>
+
+        <!-- Image Trust Note -->
+        <p class="small text-muted mt-2">
+            100% original product images
+        </p>
     </div>
 
-    <div class="col-md-6">
-        <h2 class="fw-bold">{{ product.name }}</h2>
-        <h4 class="text-success mt-2">₹ {{ product.price }}</h4>
+    <!-- ================= PRODUCT DETAILS ================= -->
+    <div class="col-lg-6">
+
+        <h2 class="fw-bold mb-2">
+            {{ product.name }}
+        </h2>
+
+        <h4 class="text-success fw-semibold mb-3">
+            ₹ {{ product.price }}
+        </h4>
+
+        <!-- ================= STOCK STATUS ================= -->
+        {% if product.stock == 0 %}
+            <span class="badge bg-danger mb-3 px-3 py-2">
+                Out of Stock
+            </span>
+        {% elif product.stock <= 5 %}
+            <span class="badge bg-warning text-dark mb-3 px-3 py-2">
+                Limited Stock Available
+            </span>
+        {% else %}
+            <span class="badge bg-success mb-3 px-3 py-2">
+                In Stock
+            </span>
+        {% endif %}
 
         <p class="text-muted mt-3">
             {{ product.description }}
@@ -21,23 +51,52 @@
 
         <hr>
 
-        <ul class="text-muted small">
-            <li>Free delivery available</li>
-            <li>Cash on Delivery supported</li>
-            <li>Secure online payment</li>
-        </ul>
-
-        <div class="d-grid gap-3 mt-4">
-            <a href="{% url 'store:add_to_cart' product.id %}?buy_now=1"
-               class="btn btn-warning btn-lg fw-bold">
-                Buy Now
-            </a>
-
-            <a href="{% url 'store:add_to_cart' product.id %}"
-               class="btn btn-dark btn-lg">
-                Add to Cart
-            </a>
+        <!-- ================= TRUST BADGES (CORE OF PHASE X1) ================= -->
+        <div class="row small text-muted mb-4">
+            <div class="col-6 mb-2">
+                🔒 <strong>Secure Payments</strong><br>
+                <span class="small">SSL protected checkout</span>
+            </div>
+            <div class="col-6 mb-2">
+                💰 <strong>Cash on Delivery</strong><br>
+                <span class="small">Pay after delivery</span>
+            </div>
+            <div class="col-6 mb-2">
+                🚚 <strong>Fast Delivery</strong><br>
+                <span class="small">3–5 business days</span>
+            </div>
+            <div class="col-6 mb-2">
+                🔁 <strong>Easy Returns</strong><br>
+                <span class="small">Hassle-free policy</span>
+            </div>
         </div>
+
+        <!-- ================= ACTION BUTTONS ================= -->
+        <div class="d-grid gap-3">
+
+            {% if product.stock > 0 %}
+                <a href="{% url 'store:add_to_cart' product.id %}?buy_now=1"
+                   class="btn btn-success btn-lg fw-bold">
+                    Buy Now
+                </a>
+
+                <a href="{% url 'store:add_to_cart' product.id %}"
+                   class="btn btn-dark btn-lg">
+                    Add to Cart
+                </a>
+            {% else %}
+                <button class="btn btn-secondary btn-lg" disabled>
+                    Currently Unavailable
+                </button>
+            {% endif %}
+
+        </div>
+
+        <!-- ================= FINAL TRUST LINE ================= -->
+        <p class="small text-muted mt-3">
+            ✔ Trusted by multiple users · ✔ Secure checkout · ✔ Invoice provided
+        </p>
+
     </div>
 </div>
 

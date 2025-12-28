@@ -1,64 +1,89 @@
 {% extends 'base.html' %}
-
 {% block content %}
 
 <h3 class="mb-4">My Profile</h3>
 
-<form method="post" class="mb-5">
+<!-- ================= ERROR / SUCCESS MESSAGE ================= -->
+{% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+{% endif %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ================= PROFILE FORM ================= -->
+<form method="post" class="card shadow-sm border-0 p-4">
     {% csrf_token %}
 
-    <h5 class="mb-3">Account Information</h5>
+    <h5 class="mb-3">Account Details</h5>
 
     <div class="mb-3">
         <label class="form-label">Username</label>
-        <input class="form-control" value="{{ request.user.username }}" disabled>
+        <input
+            name="username"
+            class="form-control"
+            value="{{ request.user.username }}"
+            required
+        >
     </div>
 
     <div class="mb-3">
         <label class="form-label">Email</label>
-        <input name="email" class="form-control" value="{{ request.user.email }}">
+        <input
+            name="email"
+            type="email"
+            class="form-control"
+            value="{{ request.user.email }}"
+        >
     </div>
 
-    <h5 class="mt-4 mb-3">Contact Details</h5>
+    <h5 class="mt-4 mb-3">Contact Information</h5>
 
     <div class="mb-3">
         <label class="form-label">Phone</label>
-        <input name="phone" class="form-control" value="{{ profile.phone }}">
+        <input
+            name="phone"
+            class="form-control"
+            value="{{ profile.phone }}"
+        >
     </div>
 
     <div class="mb-3">
         <label class="form-label">Address</label>
-        <textarea name="address" class="form-control">{{ profile.address }}</textarea>
+        <textarea
+            name="address"
+            class="form-control"
+            rows="3"
+        >{{ profile.address }}</textarea>
     </div>
 
-    <button class="btn btn-primary">
-        Update Profile
+    <button type="submit" class="btn btn-success">
+        Save Changes
     </button>
 </form>
 
-<hr>
+<!-- ================= ACTION BUTTONS ================= -->
+<div class="mt-4 d-flex flex-wrap gap-2">
 
-<h4 class="d-flex justify-content-between">
-    Notifications
-    <a href="{% url 'store:clear_notifications' %}" class="btn btn-sm btn-danger">
-        Clear All
+    <!-- Change Password -->
+    <a href="{% url 'store:change_password' %}"
+       class="btn btn-outline-danger">
+        Change Password
     </a>
-</h4>
 
-{% if notifications %}
-    <ul class="list-group mt-3">
-        {% for n in notifications %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ n.message }}
-            <a href="{% url 'store:delete_notification' n.id %}"
-               class="btn btn-sm btn-outline-danger">
-                Delete
-            </a>
-        </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p class="text-muted mt-3">No notifications</p>
-{% endif %}
+    <!-- Notifications -->
+    <a href="{% url 'store:notifications' %}"
+       class="btn btn-outline-dark">
+        View Notifications →
+    </a>
+
+</div>
 
 {% endblock %}

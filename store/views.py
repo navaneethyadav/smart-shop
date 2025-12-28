@@ -1,18 +1,22 @@
-import razorpay
+import uuid
+
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib import messages
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.urls import reverse
 
 from .models import (
-    Category, Product, Order, OrderItem,
-    UserProfile, Notification
-)
-
-razorpay_client = razorpay.Client(
-    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    Product,
+    Order,
+    OrderItem,
+    UserProfile,
+    Notification,
+    EmailVerificationToken
 )
 
 # ================= AUTH =================
@@ -29,13 +33,21 @@ def login_view(request):
             user_obj = User.objects.get(
                 Q(username=identifier) | Q(email=identifier)
             )
-            user = authenticate(
-                request,
-                username=user_obj.username,
-                password=password
-            )
         except User.DoesNotExist:
-            user = None
+            return render(request, 'store/login.html', {
+                'error': 'Invalid credentials'
+            })
+
+        if not user_obj.is_active:
+            return render(request, 'store/login.html', {
+                'error': 'Please verify your email before logging in'
+            })
+
+        user = authenticate(
+            request,
+            username=user_obj.username,
+            password=password
+        )
 
         if user:
             login(request, user)
@@ -54,9 +66,7 @@ def register_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        if User.objects.filter(
-            Q(username=username) | Q(email=email)
-        ).exists():
+        if User.objects.filter(Q(username=username) | Q(email=email)).exists():
             return render(request, 'store/register.html', {
                 'error': 'User already exists'
             })
@@ -64,12 +74,51 @@ def register_view(request):
         user = User.objects.create_user(
             username=username,
             email=email,
-            password=password
+            password=password,
+            is_active=False
         )
+
         UserProfile.objects.create(user=user)
-        return redirect('store:login')
+
+        token = EmailVerificationToken.objects.create(user=user)
+
+        verification_link = request.build_absolute_uri(
+            reverse('store:verify_email', args=[token.token])
+        )
+
+        send_mail(
+            subject='Verify your Smart Shop account',
+            message=f"""
+Hello {user.username},
+
+Please verify your email by clicking the link below:
+
+{verification_link}
+
+If you didn’t register, ignore this email.
+
+– Smart Shop Team
+            """,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False
+        )
+
+        return render(request, 'store/register_success.html')
 
     return render(request, 'store/register.html')
+
+
+def verify_email(request, token):
+    token_obj = get_object_or_404(EmailVerificationToken, token=token)
+    user = token_obj.user
+
+    user.is_active = True
+    user.save()
+
+    token_obj.delete()
+
+    return render(request, 'store/email_verified.html')
 
 
 def logout_view(request):
@@ -82,20 +131,7 @@ def logout_view(request):
 @login_required
 def home(request):
     return render(request, 'store/home.html', {
-        'categories': Category.objects.all(),
         'products': Product.objects.all()
-    })
-
-
-# ================= CATEGORY =================
-
-@login_required
-def category_products(request, slug):
-    category = get_object_or_404(Category, slug=slug)
-    products = Product.objects.filter(category=category)
-    return render(request, 'store/category_products.html', {
-        'category': category,
-        'products': products
     })
 
 
@@ -203,16 +239,12 @@ def checkout(request):
         profile.address = address
         profile.save()
 
-        if method == 'ONLINE':
-            request.session['order_address'] = address
-            return redirect('store:payment_success')
-
         order = Order.objects.create(
             user=request.user,
             address=address,
             total_amount=total,
-            payment_method='COD',
-            payment_status='PENDING',
+            payment_method=method,
+            payment_status='PAID' if method == 'ONLINE' else 'PENDING',
             status='PLACED'
         )
 
@@ -237,90 +269,27 @@ def checkout(request):
     return render(request, 'store/checkout.html', {'total': total})
 
 
-# ================= PAYMENT SUCCESS =================
-
-@login_required
-def payment_success(request):
-    cart = request.session.get('cart', {})
-    if not cart:
-        return redirect('store:home')
-
-    address = request.session.get('order_address', '')
-    total = 0
-    items = []
-
-    for pid, qty in cart.items():
-        product = get_object_or_404(Product, id=pid)
-        total += product.price * qty
-        items.append((product, qty))
-
-    order = Order.objects.create(
-        user=request.user,
-        address=address,
-        total_amount=total,
-        payment_method='ONLINE',
-        payment_status='PAID',
-        status='PLACED'
-    )
-
-    for product, qty in items:
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            quantity=qty,
-            price=product.price
-        )
-        product.stock -= qty
-        product.save()
-
-    Notification.objects.create(
-        user=request.user,
-        message=f"💳 Online payment successful for Order #{order.id}"
-    )
-
-    request.session['cart'] = {}
-    request.session.pop('order_address', None)
-
-    return redirect('store:invoice', order_id=order.id)
-
-
 # ================= ORDERS =================
 
 @login_required
 def my_orders(request):
-    orders = Order.objects.filter(
-        user=request.user
-    ).order_by('-created_at')
-
-    return render(request, 'store/my_orders.html', {
-        'orders': orders
-    })
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'store/my_orders.html', {'orders': orders})
 
 
 @login_required
 def order_detail(request, order_id):
-    order = get_object_or_404(
-        Order,
-        id=order_id,
-        user=request.user
-    )
-    return render(request, 'store/order_detail.html', {
-        'order': order
-    })
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'store/order_detail.html', {'order': order})
 
 
 @login_required
 def cancel_order(request, order_id):
-    order = get_object_or_404(
-        Order,
-        id=order_id,
-        user=request.user
-    )
+    order = get_object_or_404(Order, id=order_id, user=request.user)
 
     if order.can_cancel():
         order.status = 'CANCELLED'
         order.save()
-
         Notification.objects.create(
             user=request.user,
             message=f"❌ Order #{order.id} cancelled"
@@ -331,101 +300,93 @@ def cancel_order(request, order_id):
 
 @login_required
 def invoice(request, order_id):
-    order = get_object_or_404(
-        Order,
-        id=order_id,
-        user=request.user
-    )
-    return render(request, 'store/invoice.html', {
-        'order': order
-    })
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'store/invoice.html', {'order': order})
 
 
-# ================= PROFILE (PHASE 12 ENHANCED) =================
+# ================= PROFILE =================
 
 @login_required
 def user_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        request.user.email = request.POST.get('email')
-        profile.phone = request.POST.get('phone')
-        profile.address = request.POST.get('address')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+
+        if User.objects.exclude(pk=request.user.pk).filter(username=username).exists():
+            messages.error(request, 'Username already taken')
+            return redirect('store:profile')
+
+        request.user.username = username
+        request.user.email = email
+        profile.phone = phone
+        profile.address = address
 
         request.user.save()
         profile.save()
 
+        messages.success(request, 'Profile updated successfully')
         return redirect('store:profile')
 
-    Notification.objects.filter(
-        user=request.user,
-        is_read=False
-    ).update(is_read=True)
+    return render(request, 'store/profile.html', {'profile': profile})
 
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).order_by('-created_at')
 
-    return render(request, 'store/profile.html', {
-        'profile': profile,
-        'notifications': notifications
-    })
+# ================= CHANGE PASSWORD =================
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Current password is incorrect')
+            return redirect('store:change_password')
+
+        if new_password != confirm_password:
+            messages.error(request, 'Passwords do not match')
+            return redirect('store:change_password')
+
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters')
+            return redirect('store:change_password')
+
+        request.user.set_password(new_password)
+        request.user.save()
+
+        messages.success(request, 'Password changed successfully. Please login again.')
+        return redirect('store:login')
+
+    return render(request, 'store/change_password.html')
 
 
 # ================= NOTIFICATIONS =================
 
 @login_required
 def notifications_page(request):
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).order_by('-created_at')
-
-    return render(request, 'store/notifications.html', {
-        'notifications': notifications
-    })
-
-
-@login_required
-def mark_notification_read(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        id=notification_id,
-        user=request.user
-    )
-    notification.is_read = True
-    notification.save()
-    return redirect('store:notifications')
-
-
-@login_required
-def mark_all_notifications_read(request):
-    Notification.objects.filter(
-        user=request.user,
-        is_read=False
-    ).update(is_read=True)
-    return redirect('store:notifications')
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    notifications.filter(is_read=False).update(is_read=True)
+    return render(request, 'store/notifications.html', {'notifications': notifications})
 
 
 @login_required
 def delete_notification(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        id=notification_id,
-        user=request.user
-    )
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
     notification.delete()
-    return redirect('store:profile')
+    return redirect('store:notifications')
 
 
 @login_required
 def clear_notifications(request):
-    Notification.objects.filter(
-        user=request.user
-    ).delete()
-    return redirect('store:profile')
+    Notification.objects.filter(user=request.user).delete()
+    return redirect('store:notifications')
 
 
-# ================= STATIC =================
+# ================= STATIC PAGES =================
 
 def privacy_policy(request):
     return render(request, 'store/privacy_policy.html')

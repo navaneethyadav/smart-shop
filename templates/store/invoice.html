@@ -2,65 +2,124 @@
 
 {% block content %}
 
-<h2 class="mb-4">Order Invoice</h2>
-
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <p><strong>Order ID:</strong> #{{ order.id }}</p>
-        <p><strong>Order Date:</strong> {{ order.created_at|date:"d M Y, h:i A" }}</p>
-        <p><strong>Customer:</strong> {{ order.user.username }}</p>
-
-        <p>
-            <strong>Order Status:</strong>
-            {% if order.status == 'PLACED' %}
-                <span class="badge bg-secondary">Placed</span>
-            {% elif order.status == 'CONFIRMED' %}
-                <span class="badge bg-info">Confirmed</span>
-            {% elif order.status == 'SHIPPED' %}
-                <span class="badge bg-primary">Shipped</span>
-            {% elif order.status == 'DELIVERED' %}
-                <span class="badge bg-success">Delivered</span>
-            {% elif order.status == 'CANCELLED' %}
-                <span class="badge bg-danger">Cancelled</span>
-            {% endif %}
-        </p>
-
-        <p>
-            <strong>Payment Method:</strong> {{ order.payment_method }}
-            <br>
-            <strong>Payment Status:</strong>
-            {% if order.payment_status == 'PAID' %}
-                <span class="text-success">Payment Successful</span>
-            {% else %}
-                <span class="text-warning">Payment Pending (Pay on Delivery)</span>
-            {% endif %}
-        </p>
-
-        <p><strong>Delivery Address:</strong><br>{{ order.address }}</p>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Invoice</h2>
+    <span class="badge bg-success px-3 py-2">
+        {{ order.payment_status }}
+    </span>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header">
-        <strong>Items</strong>
-    </div>
+<div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-        {% for item in order.items.all %}
-        <div class="row mb-2">
-            <div class="col-6">{{ item.product.name }}</div>
-            <div class="col-2">x {{ item.quantity }}</div>
-            <div class="col-4 text-end">₹ {{ item.price }}</div>
+
+        <!-- ================= HEADER ================= -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h5 class="fw-bold mb-1">Smart Shop</h5>
+                <p class="text-muted small mb-0">
+                    Thank you for shopping with Smart Shop.
+                </p>
+            </div>
+
+            <div class="col-md-6 text-md-end">
+                <p class="mb-1">
+                    <strong>Invoice #:</strong> {{ order.id }}
+                </p>
+                <p class="mb-0">
+                    <strong>Date:</strong>
+                    {{ order.created_at|date:"d M Y, h:i A" }}
+                </p>
+            </div>
         </div>
-        {% endfor %}
+
         <hr>
-        <h5 class="text-end">Total Paid / Payable: ₹ {{ order.total_amount }}</h5>
+
+        <!-- ================= CUSTOMER DETAILS ================= -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p class="fw-bold mb-1">Billed To</p>
+                <p class="mb-0 text-muted">
+                    {{ order.user.username }}<br>
+                    {{ order.address }}
+                </p>
+            </div>
+
+            <div class="col-md-6 text-md-end">
+                <p class="fw-bold mb-1">Payment Method</p>
+                <p class="mb-0 text-muted">
+                    {{ order.payment_method }} ({{ order.payment_status }})
+                </p>
+            </div>
+        </div>
+
+        <!-- ================= ITEMS TABLE ================= -->
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-end">₹ {{ item.price }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <hr>
+
+        <!-- ================= TOTAL ================= -->
+        <div class="d-flex justify-content-end">
+            <div class="text-end">
+                <p class="mb-1 text-muted">Total Amount</p>
+                <h4 class="fw-bold text-success">
+                    ₹ {{ order.total_amount }}
+                </h4>
+            </div>
+        </div>
+
+        <!-- ================= TRUST FOOTER (PHASE X1 FINAL) ================= -->
+        <hr>
+
+        <div class="row text-center small text-muted mt-3">
+            <div class="col-md-3 mb-2">
+                🔒 Secure Payment
+            </div>
+            <div class="col-md-3 mb-2">
+                🚚 Fast Delivery
+            </div>
+            <div class="col-md-3 mb-2">
+                🔁 Easy Returns
+            </div>
+            <div class="col-md-3 mb-2">
+                🧾 Invoice Verified
+            </div>
+        </div>
+
+        <p class="text-center small text-muted mt-2 mb-0">
+            This is a system-generated invoice and does not require a signature.
+        </p>
+
     </div>
 </div>
 
-<div class="mt-4">
+<!-- ================= ACTIONS ================= -->
+<div class="d-flex justify-content-between align-items-center">
     <a href="{% url 'store:my_orders' %}" class="btn btn-outline-dark">
-        Back to My Orders
+        ← Back to My Orders
     </a>
+
+    <button onclick="window.print()" class="btn btn-dark">
+        Print Invoice
+    </button>
 </div>
 
 {% endblock %}

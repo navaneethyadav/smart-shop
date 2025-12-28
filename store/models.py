@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+import uuid
 
+
+# ================= CATEGORY =================
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -9,6 +13,8 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
+# ================= PRODUCT =================
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
@@ -22,6 +28,8 @@ class Product(models.Model):
         return self.name
 
 
+# ================= USER PROFILE =================
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15, blank=True)
@@ -30,6 +38,8 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+
+# ================= ORDER =================
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -65,12 +75,16 @@ class Order(models.Model):
         return f"Order #{self.id}"
 
 
+# ================= ORDER ITEM =================
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField()
 
+
+# ================= NOTIFICATION =================
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
@@ -80,3 +94,14 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.message
+
+
+# ================= EMAIL VERIFICATION TOKEN =================
+
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Email verification for {self.user.username}"

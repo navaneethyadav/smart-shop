@@ -1,18 +1,22 @@
-# Environment & secrets
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+
+# Environment variables
 .env
 
 # Database
 db.sqlite3
 
-# Python cache
-__pycache__/
-*.pyc
-
-# Virtual environment
-venv/
-
-# Collected static
+# Static collected files
 staticfiles/
 
-# Media (optional – keep local)
+# Media uploads
 media/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,14 +1,18 @@
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================= CORE =================
 
-SECRET_KEY = 'django-insecure-dev-key'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    '127.0.0.1,localhost'
+).split(',')
 
 
 # ================= APPS =================
@@ -96,31 +100,26 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 
-# ================= SECURITY HARDENING (PHASE 14) =================
+# ================= SECURITY (FROM PHASE 14) =================
 
-# Cookies
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-# Browser protections
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# Clickjacking
 X_FRAME_OPTIONS = 'DENY'
 
-# HTTPS enforcement (auto when DEBUG=False)
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
-# Session safety
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 day
+SESSION_COOKIE_AGE = 60 * 60 * 24
 
 
 # ================= DEFAULTS =================
@@ -128,7 +127,20 @@ SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 day
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# ================= PAYMENT (UNCHANGED) =================
+# ================= PAYMENT =================
 
 RAZORPAY_KEY_ID = 'rzp_test_RwwR0BVpcuV8gA'
 RAZORPAY_KEY_SECRET = 'Tn79Wr514WO3pSIW3s8NID1q'
+
+# ================= EMAIL CONFIGURATION =================
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'navshalnk@gmail.com'
+EMAIL_HOST_PASSWORD = 'kebqpeqbwoqsvfsf'
+
+DEFAULT_FROM_EMAIL = 'Smart Shop <navshalnk@gmail.com>'

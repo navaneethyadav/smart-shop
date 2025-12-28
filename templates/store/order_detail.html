@@ -2,48 +2,127 @@
 
 {% block content %}
 
-<h2 class="mb-3">Order #{{ order.id }}</h2>
+<h2 class="fw-bold mb-3">Order Details</h2>
 
-<p>
-    <strong>Status:</strong>
-    {% if order.status == 'PLACED' %}
-        <span class="badge bg-secondary">Placed</span>
-    {% elif order.status == 'CONFIRMED' %}
-        <span class="badge bg-info">Confirmed</span>
-    {% elif order.status == 'SHIPPED' %}
-        <span class="badge bg-primary">Shipped</span>
-    {% elif order.status == 'DELIVERED' %}
-        <span class="badge bg-success">Delivered</span>
-    {% elif order.status == 'CANCELLED' %}
-        <span class="badge bg-danger">Cancelled</span>
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+
+        <!-- ================= ORDER HEADER ================= -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h6 class="fw-bold mb-1">Order #{{ order.id }}</h6>
+                <small class="text-muted">
+                    Placed on {{ order.created_at|date:"d M Y, h:i A" }}
+                </small>
+            </div>
+
+            <!-- Status Badge -->
+            <div>
+                {% if order.status == 'PLACED' %}
+                    <span class="badge bg-secondary px-3 py-2">Placed</span>
+                {% elif order.status == 'CONFIRMED' %}
+                    <span class="badge bg-info px-3 py-2">Confirmed</span>
+                {% elif order.status == 'SHIPPED' %}
+                    <span class="badge bg-primary px-3 py-2">Shipped</span>
+                {% elif order.status == 'DELIVERED' %}
+                    <span class="badge bg-success px-3 py-2">Delivered</span>
+                {% elif order.status == 'CANCELLED' %}
+                    <span class="badge bg-danger px-3 py-2">Cancelled</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ================= ORDER STATUS TIMELINE ================= -->
+        {% if order.status != 'CANCELLED' %}
+        <div class="order-timeline mb-4">
+
+            <div class="step {% if order.status in 'PLACED CONFIRMED SHIPPED DELIVERED' %}active{% endif %}">
+                Placed
+            </div>
+
+            <div class="line {% if order.status in 'CONFIRMED SHIPPED DELIVERED' %}active{% endif %}"></div>
+
+            <div class="step {% if order.status in 'CONFIRMED SHIPPED DELIVERED' %}active{% endif %}">
+                Confirmed
+            </div>
+
+            <div class="line {% if order.status in 'SHIPPED DELIVERED' %}active{% endif %}"></div>
+
+            <div class="step {% if order.status in 'SHIPPED DELIVERED' %}active{% endif %}">
+                Shipped
+            </div>
+
+            <div class="line {% if order.status == 'DELIVERED' %}active{% endif %}"></div>
+
+            <div class="step {% if order.status == 'DELIVERED' %}active{% endif %}">
+                Delivered
+            </div>
+
+        </div>
+        {% endif %}
+
+        <hr>
+
+        <!-- ================= ADDRESS & PAYMENT ================= -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p class="fw-bold mb-1">Delivery Address</p>
+                <p class="text-muted small mb-0">
+                    {{ order.address }}
+                </p>
+            </div>
+
+            <div class="col-md-6">
+                <p class="fw-bold mb-1">Payment Method</p>
+                <p class="text-muted small mb-0">
+                    {{ order.payment_method }} ({{ order.payment_status }})
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= ITEMS SECTION ================= -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">Items in this Order</h6>
+
+        {% for item in order.items.all %}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <p class="mb-0 fw-semibold">{{ item.product.name }}</p>
+                <small class="text-muted">Quantity: {{ item.quantity }}</small>
+            </div>
+            <div class="fw-bold">
+                ₹ {{ item.price }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <hr>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <p class="mb-0 fw-bold">Total Amount</p>
+            <h5 class="fw-bold text-success mb-0">
+                ₹ {{ order.total_amount }}
+            </h5>
+        </div>
+    </div>
+</div>
+
+<!-- ================= ACTIONS ================= -->
+<div class="d-flex justify-content-between align-items-center">
+    <a href="{% url 'store:my_orders' %}" class="btn btn-outline-dark">
+        ← Back to My Orders
+    </a>
+
+    {% if order.can_cancel %}
+    <a href="{% url 'store:cancel_order' order.id %}"
+       class="btn btn-danger">
+        Cancel Order
+    </a>
     {% endif %}
-</p>
-
-<p>
-    <strong>Payment:</strong>
-    {{ order.payment_method }} ({{ order.payment_status }})
-</p>
-
-<p>
-    <strong>Delivery Address:</strong><br>
-    {{ order.address }}
-</p>
-
-<hr>
-
-<h5>Items</h5>
-{% for item in order.items.all %}
-    <p>{{ item.product.name }} × {{ item.quantity }} — ₹ {{ item.price }}</p>
-{% endfor %}
-
-<hr>
-<h5>Total: ₹ {{ order.total_amount }}</h5>
-
-{% if order.can_cancel %}
-<br>
-<a href="{% url 'store:cancel_order' order.id %}" class="btn btn-danger">
-    Cancel Order
-</a>
-{% endif %}
+</div>
 
 {% endblock %}
